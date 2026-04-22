@@ -1,0 +1,69 @@
+- Project Discovery Log - Retail Customer Segmentation
+- Purpose: Central source of truth for key insights, technical decisions, and business findings across the project lifecycle.
+
+- Data Ingestion
+  - Loaded the Online Retail II dataset from the local `./data/` path into a Pandas DataFrame.
+  - Performed initial cleaning to improve analytical reliability:
+    - Removed rows with missing customer identifiers.
+    - Removed canceled orders where Invoice begins with `C`.
+  - Persisted cleaned transactional data into a local SQLite database `retail.db` in table `transactions` for reproducible downstream analysis.
+
+- Feature Engineering (RFM Logic)
+  - Built customer-level RFM features by grouping transactions on `CustomerID`.
+  - Defined snapshot date as one day after the latest `InvoiceDate` in the cleaned dataset.
+  - Calculated:
+    - Recency: Days between snapshot date and each customer’s most recent invoice date.
+    - Frequency: Number of unique invoices per customer.
+    - Monetary: Total spend per customer calculated as sum of (`Quantity * Price`).
+  - Applied a quality filter to keep only customers with positive Monetary values (`Monetary > 0`).
+
+- Preprocessing
+  - Assessed skewness in Recency, Frequency, and Monetary using `seaborn.histplot`.
+  - Applied `np.log1p` log transformation to reduce right-skew and dampen outlier impact.
+  - Applied `StandardScaler` to normalize feature scales so K-Means distance calculations are balanced across all RFM dimensions.
+
+- Clustering
+  - Executed Elbow Method (K=1 to K=10) using K-Means inertia values.
+  - Observed an elbow bend around K=2.
+  - Strategic decision: selected K=4 to create more actionable and business-usable customer personas, rather than a minimal-cluster technical optimum.
+  - Added cluster labels back to the original (non-log) RFM DataFrame for interpretability.
+
+- Current Cluster Profiles (K=4)
+  - Cluster 0
+    - Customer Count: 949
+    - Mean Recency: 23.14
+    - Mean Frequency: 2.05
+    - Mean Monetary: 565.80
+  - Cluster 1
+    - Customer Count: 776
+    - Mean Recency: 13.89
+    - Mean Frequency: 13.58
+    - Mean Monetary: 7422.65
+  - Cluster 2
+    - Customer Count: 1397
+    - Mean Recency: 187.57
+    - Mean Frequency: 1.29
+    - Mean Monetary: 302.53
+  - Cluster 3
+    - Customer Count: 1190
+    - Mean Recency: 82.66
+    - Mean Frequency: 4.14
+    - Mean Monetary: 1775.16
+
+- Final Cluster Personas
+  - Cluster 1: Champions
+    - Marketing Action: Reward with VIP-only early access to new products and premium loyalty perks to maximize retention and advocacy.
+  - Cluster 3: Loyal Customers
+    - Marketing Action: Increase repeat purchase frequency with personalized cross-sell bundles and milestone-based loyalty rewards.
+  - Cluster 0: Promising Newcomers
+    - Marketing Action: Nurture second and third purchases using welcome journeys, limited-time incentives, and product discovery recommendations.
+  - Cluster 2: Hibernating / Lost
+    - Marketing Action: Run win-back campaigns with strong reactivation offers and targeted reminders focused on previously viewed or purchased categories.
+
+- Future Instruction
+  - Always update this file after each major analysis step.
+  - Record:
+    - Key insights discovered.
+    - Technical decisions made and why.
+    - Business findings and implications.
+  - This log is the official source of truth for drafting the final GitHub README narrative.
